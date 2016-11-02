@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MealsToday", "MealsToday\MealsToday.csproj", "{D7A25F67-2337-41DC-B431-590EFBA7419C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MealsToday.Data", "MealsToday.Data\MealsToday.Data.csproj", "{4A9FE189-C6A8-4A34-8AF5-D4DB2C9DC76C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MealsToday.Providers", "MealsToday.Providers\MealsToday.Providers.csproj", "{3972F7E8-74E5-4536-830E-E16393B868F0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D7A25F67-2337-41DC-B431-590EFBA7419C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7A25F67-2337-41DC-B431-590EFBA7419C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7A25F67-2337-41DC-B431-590EFBA7419C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7A25F67-2337-41DC-B431-590EFBA7419C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A9FE189-C6A8-4A34-8AF5-D4DB2C9DC76C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A9FE189-C6A8-4A34-8AF5-D4DB2C9DC76C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A9FE189-C6A8-4A34-8AF5-D4DB2C9DC76C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A9FE189-C6A8-4A34-8AF5-D4DB2C9DC76C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3972F7E8-74E5-4536-830E-E16393B868F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3972F7E8-74E5-4536-830E-E16393B868F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3972F7E8-74E5-4536-830E-E16393B868F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3972F7E8-74E5-4536-830E-E16393B868F0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
