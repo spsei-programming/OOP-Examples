@@ -4,8 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
+using DirStats.Data;
+using DirStats.Enums;
 
 namespace DirStats
 {
@@ -18,6 +21,9 @@ namespace DirStats
             // 1. Count of files starting with letter A-Z
             // 2. Count of files by extension
             // 3. Sum of all exe files
+            // 4. Print all exe files
+            // 5. Print all files with size bigger than 3 000 000 bytes - use linq
+            // 5. Print all files from folders starting with C
 
             // Not working because of ACL
             //var directories = Directory.GetDirectories("c:\\Program Files", "*", SearchOption.AllDirectories);
@@ -44,9 +50,18 @@ namespace DirStats
             stopwatch.Stop();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}");
 
-            var azDict = getAzDict();
+            //var azDict = getAzDict();
+            //analyzeAZFiles(files, azDict);
 
-            analyzeAZFiles(files, azDict);
+            //sumOfAllExeFiles(files);
+
+            //printAllExeFiles(files);
+
+            var myFiles = convertToMyFilesLinq(files);
+
+            printAllFilesInDirStartWithFromFilePath(files, "Co");
+
+
         }
 
         private static void analyzeAZFiles(List<FileInfo> files, Dictionary<char, List<FileInfo>> azDict)
@@ -78,6 +93,136 @@ namespace DirStats
             }
 
             return countsByExt;
+        }
+
+        private static long sumOfAllExeFilesPlain(List<FileInfo> files)
+        {
+            long sum = 0;
+            foreach (var file in files)
+            {
+                if (file.Extension.Equals(".exe", StringComparison.InvariantCultureIgnoreCase))
+                    sum += file.Length;
+            }
+            return sum;
+        }
+
+        private static long sumOfAllExeFiles(List<FileInfo> files)
+        {
+            return sumOfAllFilesLinq(files, FileExtensions.ExeFiles);
+        }
+
+        private static long sumOfAllFilesLinq(List<FileInfo> files, string extension)
+        {
+            //with intermediate results
+            //var exeFiles = files.Where(file => file.Extension.Equals(extension)).ToList();
+            //var sum = exeFiles.Sum(file=>file.Length);
+
+            
+            //chained methods
+            return files
+                .Where(x=>x.Extension.Equals(extension, StringComparison.CurrentCultureIgnoreCase))
+                .Sum(x=>x.Length);
+        }
+
+        private static void printAllExeFiles(List<FileInfo> files)
+        {
+            printAllFiles(files, FileExtensions.ExeFiles);
+        }
+
+        private static void printAllFiles(List<FileInfo> files, string extension)
+        {
+            files
+                .Where(f=>f.Extension.Equals(extension, StringComparison.InvariantCultureIgnoreCase))
+                .ToList()
+                .ForEach(f =>
+                {
+                    Console.WriteLine($"File: {f.Name}, Length: {f.Length}");
+                });    
+        }
+
+        private static void printAllExeMyFiles(List<MyFileInfo> files)
+        {
+            printAllMyFiles(files, FileExtensions.ExeFiles);
+        }
+
+        private static void printAllMyFiles(List<MyFileInfo> files, string extension)
+        {
+            files
+                .Where(f => f.Extension.Equals(extension, StringComparison.InvariantCultureIgnoreCase))
+                .ToList()
+                .ForEach(Console.WriteLine);
+        }
+
+        private static void printAllFilesInDirStartWith(List<FileInfo> files, string startsWith)
+        {
+            files.Where(x=>x.Directory.Name.StartsWith(startsWith, StringComparison.InvariantCultureIgnoreCase))
+                .ToList()
+                .ForEach(Console.WriteLine);
+        }
+
+        private static void printAllFilesInDirStartWithFromFilePath(List<FileInfo> files, string startsWith)
+        {
+            files.Where(x =>
+            {
+                var firstSub = x.FullName.Substring(0, x.FullName.LastIndexOf('\\'));
+                var dir = firstSub.Substring(firstSub.LastIndexOf('\\') + 1);
+                return dir.StartsWith(startsWith, StringComparison.InvariantCultureIgnoreCase);
+            })
+            .ToList()
+            .ForEach(Console.WriteLine);
+
+        }
+        private static List<MyFileInfo> convertToMyFilesPlain(List<FileInfo> files)
+        {
+            List<MyFileInfo> myFiles = new List<MyFileInfo>(files.Count);
+
+            foreach (var file in files)
+            {
+                MyFileInfo my = new MyFileInfo();
+                my.Name = file.Name;
+                my.Length = file.Length;
+                my.Created = file.CreationTime;
+                my.Extension = file.Extension;
+
+                myFiles.Add(my);
+            }
+
+            return myFiles;
+        }
+
+        private static List<MyFileInfo> convertToMyFilesLinq(List<FileInfo> files)
+        {
+            //not necessary, use Select
+            //List<MyFileInfo> myFiles = new List<MyFileInfo>(files.Count);
+
+            //files.ForEach(file =>
+            //{
+            //    MyFileInfo my = new MyFileInfo();
+            //    my.Name = file.Name;
+            //    my.Length = file.Length;
+            //    my.Created = file.CreationTime;
+            //    my.Extension = file.Extension;
+
+            //    myFiles.Add(my);
+            //});
+
+            //return myFiles;
+
+            return files.Select(file =>
+            {
+                MyFileInfo my = new MyFileInfo();
+                my.Name = file.Name;
+                my.Length = file.Length;
+                my.Created = file.CreationTime;
+                my.Extension = file.Extension;
+
+                return my;
+            }).ToList();
+        }
+
+        private static void printAllFilesBigger3MBs(List<MyFileInfo> files)
+        {
+            files.Where(x => x.Length > 3000000).ToList().ForEach(Console.WriteLine);
         }
 
         /// <summary>
@@ -219,208 +364,209 @@ namespace DirStats
         /// </summary>
         /// <param name="files"></param>
         /// <returns></returns>
-        private static List<int> AZThroughSwitch(List<FileInfo> files)
-        {
-            List<int> pocty = new List<int>(26);
-            int a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0, p = 0, q = 0, r = 0, s = 0, t = 0, u = 0, v = 0, w = 0, x = 0, y = 0, z = 0;
-​
-            foreach (FileInfo nameFileInfo in files)
-            {
-                var selektor = nameFileInfo.Name[0];
-                Convert.ToChar(selektor);
-                selektor = Char.ToUpper(selektor);
+//        private static List<int> AZThroughSwitch(List<FileInfo> files)
+//        {
+//            List<int> pocty = new List<int>(26);
+//            int a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0, p = 0, q = 0, r = 0, s = 0, t = 0, u = 0, v = 0, w = 0, x = 0, y = 0, z = 0;
+//​
+//            foreach (FileInfo nameFileInfo in files)
+//            {
+//                var selektor = nameFileInfo.Name[0];
+//                Convert.ToChar(selektor);
+//                selektor = Char.ToUpper(selektor);
 
-                switch (selektor)
-                {
-                    case 'A':
-                        {
-                            a++;
-                        }
-                        break;
-​
-                    case 'B':
-                        {
-                            b++;
-                        }
-                        break;
-​
-                    case 'C':
-                        {
-                            c++;
-                        }
-                        break;
-​
-                    case 'D':
-                        {
-                            d++;
-                        }
-                        break;
-​
-                    case 'E':
-                        {
-                            e++;
-                        }
-                        break;
-​
-                    case 'F':
-                        {
-                            f++;
-                        }
-                        break;
-​
-                    case 'G':
-                        {
-                            g++;
-                        }
-                        break;
-​
-                    case 'H':
-                        {
-                            h++;
-                        }
-                        break;
-​
-                    case 'I':
-                        {
-                            i++;
-                        }
-                        break;
-​
-                    case 'J':
-                        {
-                            j++;
-                        }
-                        break;
-​
-                    case 'K':
-                        {
-                            k++;
-                        }
-                        break;
-​
-                    case 'L':
-                        {
-                            l++;
-                        }
-                        break;
-​
-                    case 'M':
-                        {
-                            m++;
-                        }
-                        break;
-                    case 'N':
-                        {
-                            n++;
-                        }
-                        break;
-​
-                    case 'O':
-                        {
-                            o++;
-                        }
-                        break;
-​
-                    case 'P':
-                        {
-                            p++;
-                        }
-                        break;
-​
-                    case 'Q':
-                        {
-                            q++;
-                        }
-                        break;
-​
-                    case 'R':
-                        {
-                            r++;
-                        }
-                        break;
-​
-                    case 'S':
-                        {
-                            s++;
-                        }
-                        break;
-​
-                    case 'T':
-                        {
-                            t++;
-                        }
-                        break;
-​
-                    case 'U':
-                        {
-                            u++;
-                        }
-                        break;
-​
-                    case 'V':
-                        {
-                            v++;
-                        }
-                        break;
-​
-                    case 'W':
-                        {
-                            w++;
-                        }
-                        break;
-​
-                    case 'X':
-                        {
-                            x++;
-                        }
-                        break;
-​
-                    case 'Y':
-                        {
-                            y++;
-                        }
-                        break;
-​
-                    case 'Z':
-                        {
-                            z++;
-                        }
-                        break;
-​
-                }
-            }
-​
-​
-            pocty.Add(a);
-            pocty.Add(b);
-            pocty.Add(c);
-            pocty.Add(d);
-            pocty.Add(e);
-            pocty.Add(f);
-            pocty.Add(g);
-            pocty.Add(h);
-            pocty.Add(i);
-            pocty.Add(j);
-            pocty.Add(k);
-            pocty.Add(l);
-            pocty.Add(m);
-            pocty.Add(n);
-            pocty.Add(o);
-            pocty.Add(p);
-            pocty.Add(q);
-            pocty.Add(r);
-            pocty.Add(s);
-            pocty.Add(t);
-            pocty.Add(u);
-            pocty.Add(v);
-            pocty.Add(w);
-            pocty.Add(x);
-            pocty.Add(y);
-            pocty.Add(z);
-​
-​
-            return pocty;
-        }
+//                switch (selektor)
+//                {
+//                    case 'A':
+//                        {
+//                            a++;
+//                        }
+//                        break;
+//​
+//                    case 'B':
+//                        {
+//                            b++;
+//                        }
+//                        break;
+//​
+//                    case 'C':
+//                        {
+//                            c++;
+//                        }
+//                        break;
+//​
+//                    case 'D':
+//                        {
+//                            d++;
+//                        }
+//                        break;
+//​
+//                    case 'E':
+//                        {
+//                            e++;
+//                        }
+//                        break;
+//​
+//                    case 'F':
+//                        {
+//                            f++;
+//                        }
+//                        break;
+//​
+//                    case 'G':
+//                        {
+//                            g++;
+//                        }
+//                        break;
+//​
+//                    case 'H':
+//                        {
+//                            h++;
+//                        }
+//                        break;
+//​
+//                    case 'I':
+//                        {
+//                            i++;
+//                        }
+//                        break;
+//​
+//                    case 'J':
+//                        {
+//                            j++;
+//                        }
+//                        break;
+//​
+//                    case 'K':
+//                        {
+//                            k++;
+//                        }
+//                        break;
+//​
+//                    case 'L':
+//                        {
+//                            l++;
+//                        }
+//                        break;
+//​
+//                    case 'M':
+//                        {
+//                            m++;
+//                        }
+//                        break;
+//                    case 'N':
+//                        {
+//                            n++;
+//                        }
+//                        break;
+//​
+//                    case 'O':
+//                        {
+//                            o++;
+//                        }
+//                        break;
+//​
+//                    case 'P':
+//                        {
+//                            p++;
+//                        }
+//                        break;
+//​
+//                    case 'Q':
+//                        {
+//                            q++;
+//                        }
+//                        break;
+//​
+//                    case 'R':
+//                        {
+//                            r++;
+//                        }
+//                        break;
+//​
+//                    case 'S':
+//                        {
+//                            s++;
+//                        }
+//                        break;
+//​
+//                    case 'T':
+//                        {
+//                            t++;
+//                        }
+//                        break;
+//​
+//                    case 'U':
+//                        {
+//                            u++;
+//                        }
+//                        break;
+//​
+//                    case 'V':
+//                        {
+//                            v++;
+//                        }
+//                        break;
+//​
+//                    case 'W':
+//                        {
+//                            w++;
+//                        }
+//                        break;
+//​
+//                    case 'X':
+//                        {
+//                            x++;
+//                        }
+//                        break;
+//​
+//                    case 'Y':
+//                        {
+//                            y++;
+//                        }
+//                        break;
+//​
+//                    case 'Z':
+//                        {
+//                            z++;
+//                        }
+//                        break;
+//​
+//                }
+//            }
+//​
+//​
+//            pocty.Add(a);
+//            pocty.Add(b);
+//            pocty.Add(c);
+//            pocty.Add(d);
+//            pocty.Add(e);
+//            pocty.Add(f);
+//            pocty.Add(g);
+//            pocty.Add(h);
+//            pocty.Add(i);
+//            pocty.Add(j);
+//            pocty.Add(k);
+//            pocty.Add(l);
+//            pocty.Add(m);
+//            pocty.Add(n);
+//            pocty.Add(o);
+//            pocty.Add(p);
+//            pocty.Add(q);
+//            pocty.Add(r);
+//            pocty.Add(s);
+//            pocty.Add(t);
+//            pocty.Add(u);
+//            pocty.Add(v);
+//            pocty.Add(w);
+//            pocty.Add(x);
+//            pocty.Add(y);
+//            pocty.Add(z);
+//​
+//​
+//            return pocty;
+//        }
+
 
         private static string[] getSubdirs(string directory, List<string> subdirs)
         {
