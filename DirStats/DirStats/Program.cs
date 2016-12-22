@@ -20,10 +20,12 @@ namespace DirStats
             // Stats as follow:
             // 1. Count of files starting with letter A-Z
             // 2. Count of files by extension
-            // 3. Sum of all exe files
+            // 3. Total size of all exe files
             // 4. Print all exe files
             // 5. Print all files with size bigger than 3 000 000 bytes - use linq
-            // 5. Print all files from folders starting with C
+            // 6. Print all files from folders starting with C
+            // 7. Total size size of all hidden files
+            // 8. First file with size greater than 15 000 000 bytes
 
             // Not working because of ACL
             //var directories = Directory.GetDirectories("c:\\Program Files", "*", SearchOption.AllDirectories);
@@ -50,6 +52,7 @@ namespace DirStats
             stopwatch.Stop();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}");
 
+            
             //var azDict = getAzDict();
             //analyzeAZFiles(files, azDict);
 
@@ -59,7 +62,8 @@ namespace DirStats
 
             var myFiles = convertToMyFilesLinq(files);
 
-            printAllFilesInDirStartWithFromFilePath(files, "Co");
+            //printAllFilesInDirStartWithFromFilePath(files, "Co");
+            printTopBiggestFiles(files, 20);
 
 
         }
@@ -172,6 +176,28 @@ namespace DirStats
             .ForEach(Console.WriteLine);
 
         }
+        private static void printTopBiggestFiles(List<FileInfo> files, int topX)
+        {
+            files
+            .OrderByDescending(x=>x.Length) // sort all files by its size - descending order (for ascending order use OrderBy)
+            //.Skip(20) - this would skip first 20 records in the collection
+            .Take(topX) // take only first topX records, if this Skip(20) is used takes records 21 + topX, if possible of course
+            .ToList()
+            .ForEach(x=>Console.WriteLine($"{x.Length.ToString("### ### ### ###")} - {x.Name}")); // display data in custom number format, numbers split to groups of 3
+        }
+
+
+        private static long totalSizeOfHiddenFiles(List<FileInfo> files)
+        {
+            return files.Where(x => x.Attributes == FileAttributes.Hidden).Sum(x => x.Length);
+        }
+
+        private static FileInfo firstFileWithSizeGreaterThan(List<FileInfo> files, long size)
+        {
+            return files.FirstOrDefault(x => x.Length > size);
+        }
+
+
         private static List<MyFileInfo> convertToMyFilesPlain(List<FileInfo> files)
         {
             List<MyFileInfo> myFiles = new List<MyFileInfo>(files.Count);
