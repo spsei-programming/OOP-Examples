@@ -26,6 +26,10 @@ namespace DirStats
             // 6. Print all files from folders starting with C
             // 7. Total size size of all hidden files
             // 8. First file with size greater than 15 000 000 bytes
+            // 9. Print first 3 and last 3 first level folders sorted by the 
+            //    total size of all files it contains
+            // 10. Print files paged by page size defined by user in a specific folder
+
 
             // Not working because of ACL
             //var directories = Directory.GetDirectories("c:\\Program Files", "*", SearchOption.AllDirectories);
@@ -37,7 +41,8 @@ namespace DirStats
 
             List<string> subdirs = new List<string>(2000);
 
-            getSubdirs(@"C:\Program files", subdirs);
+            string rootFolder = @"C:\Program files";
+            getSubdirs(rootFolder, subdirs);
 
             var filesList = getFilesList(subdirs);
 
@@ -52,7 +57,7 @@ namespace DirStats
             stopwatch.Stop();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}");
 
-            
+
             //var azDict = getAzDict();
             //analyzeAZFiles(files, azDict);
 
@@ -60,10 +65,21 @@ namespace DirStats
 
             //printAllExeFiles(files);
 
-            var myFiles = convertToMyFilesLinq(files);
+            //var myFiles = convertToMyFilesLinq(files);
 
             //printAllFilesInDirStartWithFromFilePath(files, "Co");
-            printTopBiggestFiles(files, 20);
+            //printTopBiggestFiles(files, 20);
+
+
+
+            var dirs = Directory.GetDirectories(rootFolder);
+                //.Select(d => new DirectoryInfo(d)).ToList(); // not needed
+
+            Console.WriteLine("Print first 3 and last 3 first level folders");
+            stopwatch.Restart();
+            printFirstLast3Folders(dirs, files);
+            stopwatch.Stop();
+            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}");
 
 
         }
@@ -187,6 +203,8 @@ namespace DirStats
         }
 
 
+
+
         private static long totalSizeOfHiddenFiles(List<FileInfo> files)
         {
             return files.Where(x => x.Attributes == FileAttributes.Hidden).Sum(x => x.Length);
@@ -250,6 +268,50 @@ namespace DirStats
         {
             files.Where(x => x.Length > 3000000).ToList().ForEach(Console.WriteLine);
         }
+       
+
+        // 9. Print first 3 and last 3 first level folders sorted by the 
+        //    total size of all files it contains
+        private static List<FileInfo> getFilesInFolder(string dir, List<FileInfo> files)
+        {
+            return files.Where(x => x.FullName.StartsWith(dir, StringComparison.InvariantCultureIgnoreCase))
+                .ToList();
+        }
+        // 9. Print first 3 and last 3 first level folders sorted by the 
+        //    total size of all files it contains
+        private static void printFirstLast3Folders(string[] dirs, List<FileInfo> files)
+        {
+            //var firstLevelFolders = getFirstLevelFolders(rootFolder, dirs);
+
+            var folders = dirs.Select(d =>
+            {
+                var filesInFolder = getFilesInFolder(d, files);
+                var sum = filesInFolder.Sum(f=>f.Length);
+
+                return new {Name = d, TotalSize = sum};
+            }).ToList();
+            
+
+            folders.OrderByDescending(f=>f.TotalSize)
+                .Take(3)
+                .ToList()
+                .ForEach((f) =>Console.WriteLine($"Folder: {f.Name} \tSize: {f.TotalSize}"));
+
+            folders.OrderByDescending(f => f.TotalSize)
+                .Skip(folders.Count-3)
+                //.Take(3)
+                .ToList()
+                .ForEach((f) => Console.WriteLine($"Folder: {f.Name} \tSize: {f.TotalSize}"));
+
+        }
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// Ondrej's version of how to replace Dictionary(char, int)
