@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FileManager.Providers;
 
 namespace FileManager
 {
@@ -21,7 +22,10 @@ namespace FileManager
             //new DirectoryInfo(sourceDir).GetFiles().ToList().ForEach(f=>f.CopyTo(targetDir));
 
             Providers.FileManager manager = new Providers.FileManager();
-            
+            manager.OnOperationStarted += Manager_OnOperationStarted;
+
+            manager.OnOperationFinished += Manager_OnOperationFinished;
+
             manager.CopyFiles(@"c:\Windows\System32\", "*.png;*.com", @"c:\temp\00000\", true);
 
             // NOT IN A MILLION YEARS!!!
@@ -31,5 +35,17 @@ namespace FileManager
 
             Console.ReadKey();
         }
+
+        private static void Manager_OnOperationFinished(object sender, InformationEventArgs e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        private static void Manager_OnOperationStarted(object sender, InformationEventArgs e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        
     }
 }

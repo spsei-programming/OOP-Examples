@@ -8,16 +8,20 @@ namespace FileManager.Providers
 {
     public class FileManager
     {
-        public event EventHandler<EventArgs> OnOperationStarted;
+        public event EventHandler<InformationEventArgs> OnOperationStarted;
 
-        public event EventHandler<EventArgs> OnOperationFinished;
+        public event EventHandler<InformationEventArgs> OnOperationFinished;
+
 
         public string CopyFile(string from, string to, bool overwrite)
         {
-           
+            raiseOperationStarted($"Starting copying file {from}");
+            
+            //Console.WriteLine($"Copying file {from}");
 
             File.Copy(from, to, overwrite);
 
+            raiseOperationFinished($"Finished copying file {from}");
             return to;
         }
 
@@ -30,7 +34,6 @@ namespace FileManager.Providers
         {
             filesToCopy.ForEach(f=>
             {
-                Console.WriteLine($"Copying file {f}");
                 CopyFile(f
                     , Path.Combine(targetDir, f.Substring(f.LastIndexOf('\\') + 1))
                     , overwrite);
@@ -60,5 +63,28 @@ namespace FileManager.Providers
         {
             throw new NotImplementedException();
         }
+
+        private void raiseOperationStarted(string message)
+        {
+            InformationEventArgs args = new InformationEventArgs() { Message = message };
+            if (OnOperationStarted != null)
+            {
+                OnOperationStarted.Invoke(this, args);  
+            }
+        }
+
+        private void raiseOperationFinished(string message)
+        {
+            InformationEventArgs args = new InformationEventArgs() {Message = message};
+            if (OnOperationFinished != null)
+            {
+                OnOperationFinished.Invoke(this, args);
+            }
+        }
+    }
+
+    public class InformationEventArgs : EventArgs
+    {
+        public string Message { get; set; }  
     }
 }
